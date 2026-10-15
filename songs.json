@@ -1,1 +1,5 @@
-[]
+[
+  { "id": "001", "yt": "TODO", "start": 0, "title": "Platzhalter 1", "artist": "Interpret 1", "year": 1965 },
+  { "id": "002", "yt": "TODO", "start": 0, "title": "Platzhalter 2", "artist": "Interpret 2", "year": 1987 },
+  { "id": "003", "yt": "TODO", "start": 0, "title": "Platzhalter 3", "artist": "Interpret 3", "year": 2008 }
+]
