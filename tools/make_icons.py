@@ -1,16 +1,15 @@
-"""Erzeugt die App-Icons (180, 192, 512 px) im Style-Schema von ZeitHit.
+"""Erzeugt die App-Icons (180, 192, 512 px) im Style-Schema von ZeitHit (Schwarz/Rot).
 
 Aufruf: python tools/make_icons.py
 """
 
 from pathlib import Path
 
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageFilter
 
-BG = (15, 11, 30)  # --bg
-PRIMARY = (255, 46, 147)  # --primary
-SECONDARY = (0, 229, 255)  # --secondary
-ACCENT = (255, 212, 0)  # --accent
+BG = (7, 6, 7)  # --bg
+PRIMARY = (196, 22, 28)  # --primary
+GLOW = (120, 10, 16)
 
 SIZES = [180, 192, 512]
 SUPERSAMPLE = 4
@@ -19,31 +18,29 @@ OUT_DIR = Path(__file__).resolve().parent.parent / "icons"
 
 def draw_icon(size: int) -> Image.Image:
     s = size * SUPERSAMPLE
-    img = Image.new("RGB", (s, s), BG)
-    d = ImageDraw.Draw(img)
     c = s / 2
+    img = Image.new("RGB", (s, s), BG)
 
-    # Cyan-Ring als Zeitleisten-/Schallplatten-Andeutung
-    r_ring = s * 0.40
-    ring_w = s * 0.035
+    # dunkelrotes Glimmen hinter dem Motiv
+    glow = Image.new("RGB", (s, s), BG)
+    gd = ImageDraw.Draw(glow)
+    r_glow = s * 0.36
+    gd.ellipse([c - r_glow, c - r_glow, c + r_glow, c + r_glow], fill=GLOW)
+    img = Image.blend(img, glow.filter(ImageFilter.GaussianBlur(s * 0.12)), 0.9)
+
+    d = ImageDraw.Draw(img)
+    # dünner roter Ring
+    r_ring = s * 0.33
     d.ellipse(
         [c - r_ring, c - r_ring, c + r_ring, c + r_ring],
-        outline=SECONDARY,
-        width=round(ring_w),
+        outline=PRIMARY,
+        width=round(s * 0.018),
     )
-
-    # Magenta-Scheibe
-    r_disc = s * 0.31
-    d.ellipse([c - r_disc, c - r_disc, c + r_disc, c + r_disc], fill=PRIMARY)
-
-    # Gelbes Play-Dreieck (optisch leicht nach rechts versetzt)
-    tri_h = s * 0.26
+    # rotes Play-Dreieck (optisch leicht nach rechts versetzt)
+    tri_h = s * 0.27
     tri_w = tri_h * 0.88
-    x0 = c - tri_w / 2 + s * 0.02
-    d.polygon(
-        [(x0, c - tri_h / 2), (x0, c + tri_h / 2), (x0 + tri_w, c)],
-        fill=ACCENT,
-    )
+    x0 = c - tri_w / 2 + s * 0.025
+    d.polygon([(x0, c - tri_h / 2), (x0, c + tri_h / 2), (x0 + tri_w, c)], fill=PRIMARY)
 
     return img.resize((size, size), Image.LANCZOS)
 

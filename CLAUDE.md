@@ -130,27 +130,31 @@ Gebrauch gedacht. YouTube-Richtlinien verlangen grundsätzlich einen sichtbaren 
 
 ## 8. Style-Schema (als CSS-Variablen in `:root`)
 
+Geändert auf Robins Wunsch (2026-10-15): weg vom bunten Retro-Look, hin zu **Schwarz/Rot, düster**.
+
 | Variable | Wert |
 |---|---|
-| `--bg` | `#0F0B1E` |
-| `--primary` (Magenta) | `#FF2E93` |
-| `--secondary` (Cyan) | `#00E5FF` |
-| `--accent` (Gelb) | `#FFD400` |
-| `--text` | `#F5F5F7` |
+| `--bg` | `#070607` |
+| `--surface` | `#141012` |
+| `--line` | `#2A1D20` |
+| `--primary` (Rot) | `#C4161C` |
+| `--primary-hi` | `#E3262D` |
+| `--text` | `#ECE6E6` |
+| `--muted` | `#8C8184` |
 
-Jahrzehntfarben: 60er Orange `#FF8A3D`, 70er Gelb `#FFD400`, 80er Magenta `#FF2E93`,
-90er Cyan `#00E5FF`, 00er Grün `#3DFF8A`, 10er Violett `#9B5CFF`, 20er Weiß `#F5F5F7`.
-Schriften: Bebas Neue (Überschriften, Jahr), Inter (Text). UI: große runde Buttons,
-hoher Kontrast, Bedienelemente im unteren Daumenbereich, Dark Mode als Standard.
+Keine Jahrzehntfarben mehr (Jahr auf der Karte einheitlich in Rot). Schriften: Bebas Neue
+(Überschriften, Jahr, gesperrt), Inter (Text). UI: dunkler Hintergrund mit rotem Glimmen von
+unten, eckigere Buttons mit Versalien, roter Play-Button, Sucher-Ecken im Scanner,
+Bedienelemente im unteren Daumenbereich.
 
 ## 9. Kartengenerator `tools/make_cards.py`
 
 - Karte: **60 × 60 mm** beschnitten, **3 mm Beschnitt** (gezeichnet 66 × 66 mm).
 - A4-Seite, **3 Spalten × 4 Reihen = 12 Karten**, Schnittmarken an den Ecken.
 - Ausgabe `cards/cards.pdf`: abwechselnd Seite „Vorderseiten" und Seite „Rückseiten".
-- **Vorderseite:** dunkler Hintergrund im Style-Schema, weißer QR-Block mit Ruhezone
-  (ca. 38 mm, abgerundet), dekoratives Muster, **keine Song-Infos**.
-- **Rückseite:** Jahr riesig in Jahrzehntfarbe, darunter Titel + Interpret (Schrift
+- **Vorderseite:** schwarzer Hintergrund mit dunkelrotem Glimmen, weißer QR-Block mit Ruhezone
+  (ca. 38 mm, abgerundet), Name in Rot, **keine Song-Infos**.
+- **Rückseite:** Jahr riesig in Rot, darunter Titel + Interpret (Schrift
   automatisch verkleinern, wenn zu lang), unten klein die ID.
 - **Duplex-Spiegelung:** Für Druck „an der langen Kante wenden" die Spalten der Rückseite
   pro Reihe umkehren (Spalte c → 2 − c), sonst passen Vorder- und Rückseite nicht zusammen.

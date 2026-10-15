@@ -42,24 +42,13 @@ GRID_W, GRID_H = COLS * BOX, ROWS * BOX
 ORIGIN_X = (PAGE_W - GRID_W) / 2
 ORIGIN_Y = (PAGE_H - GRID_H) / 2
 
-# ---------- Style-Schema ----------
-BG = HexColor("#0F0B1E")
-PRIMARY = HexColor("#FF2E93")
-SECONDARY = HexColor("#00E5FF")
-ACCENT = HexColor("#FFD400")
-TEXT = HexColor("#F5F5F7")
-MUTED = HexColor("#A39FB8")
-
-DECADES = [  # (ab Jahr, Farbe)
-    (2020, "#F5F5F7"),
-    (2010, "#9B5CFF"),
-    (2000, "#3DFF8A"),
-    (1990, "#00E5FF"),
-    (1980, "#FF2E93"),
-    (1970, "#FFD400"),
-    (0, "#FF8A3D"),
-]
-DECADE_DOTS = ["#FF8A3D", "#FFD400", "#FF2E93", "#00E5FF", "#3DFF8A", "#9B5CFF", "#F5F5F7"]
+# ---------- Style-Schema: Schwarz / Rot ----------
+BG = HexColor("#070607")
+GLOW = HexColor("#4A070B")
+PRIMARY = HexColor("#C4161C")
+LINE = HexColor("#5A1014")
+TEXT = HexColor("#ECE6E6")
+MUTED = HexColor("#8C8184")
 
 # Beispieldaten für --test (erfunden, nur zum Layouttest; keine echten Songs)
 TEST_SONGS = [
@@ -95,12 +84,6 @@ def register_fonts() -> None:
 
 
 # ---------- Helfer ----------
-def decade_color(year: int):
-    for start, color in DECADES:
-        if year >= start:
-            return HexColor(color)
-
-
 def parse_ids(spec: str) -> list[str]:
     ids: list[str] = []
     for part in spec.split(","):
@@ -193,55 +176,44 @@ def draw_front(c, tx, ty, song_id, base_url, app_name):
     bx, by = tx, ty  # Box-Ursprung
     cx, cy = bx + BOX / 2, by + BOX / 2
 
-    c.setFillColor(BG)
-    c.rect(bx, by, BOX, BOX, stroke=0, fill=1)
-
-    # Dekor: Ringe aus zwei Ecken, begrenzt auf die Karte
+    # Hintergrund: Schwarz mit dunkelrotem Glimmen von unten, begrenzt auf die Karte
     c.saveState()
     clip = c.beginPath()
     clip.rect(bx, by, BOX, BOX)
     c.clipPath(clip, stroke=0, fill=0)
-    c.setLineWidth(1.2 * mm)
-    for i, r in enumerate([16, 27, 38, 49]):
-        c.setStrokeColor(PRIMARY if i % 2 == 0 else SECONDARY)
-        c.setStrokeAlpha(0.28)
-        c.circle(bx, by, r * mm, stroke=1, fill=0)
-        c.setStrokeColor(SECONDARY if i % 2 == 0 else PRIMARY)
-        c.circle(bx + BOX, by + BOX, r * mm, stroke=1, fill=0)
+    c.setFillColor(BG)
+    c.rect(bx, by, BOX, BOX, stroke=0, fill=1)
+    c.radialGradient(cx, by - 6 * mm, 62 * mm, (GLOW, BG), extend=True)
     c.restoreState()
-    c.setStrokeAlpha(1)
 
     draw_qr(c, f"{base_url}#{song_id}", cx, cy, 38 * mm)
 
-    # Name oben, Jahrzehnt-Punkte unten (keine Song-Infos)
-    c.setFont("Bebas", 15)
-    c.setFillColor(TEXT)
-    c.drawCentredString(cx, cy + 19 * mm + (TRIM / 2 - 19 * mm) / 2 - 2, app_name.upper())
-    dot_r, gap = 1.1 * mm, 4.2 * mm
-    start_x = cx - gap * (len(DECADE_DOTS) - 1) / 2
-    dot_y = cy - 19 * mm - (TRIM / 2 - 19 * mm) / 2
-    for i, color in enumerate(DECADE_DOTS):
-        c.setFillColor(HexColor(color))
-        c.circle(start_x + i * gap, dot_y, dot_r, stroke=0, fill=1)
+    # Name oben, kurze rote Linie unten (keine Song-Infos)
+    band = (TRIM / 2 - 19 * mm) / 2
+    c.setFont("Bebas", 13)
+    c.setFillColor(PRIMARY)
+    name = " ".join(app_name.upper())  # gesperrt
+    c.drawCentredString(cx, cy + 19 * mm + band - 2, name)
+    c.setStrokeColor(PRIMARY)
+    c.setLineWidth(0.5 * mm)
+    c.line(cx - 6 * mm, cy - 19 * mm - band, cx + 6 * mm, cy - 19 * mm - band)
 
 
 def draw_back(c, tx, ty, song):
     sid, year, title, artist = song
     bx, by = tx, ty
     cx = bx + BOX / 2
-    color = decade_color(year)
+    color = PRIMARY
     inner_w = TRIM - 10 * mm
 
     c.setFillColor(BG)
     c.rect(bx, by, BOX, BOX, stroke=0, fill=1)
 
-    # dezenter Rahmen in Jahrzehntfarbe
-    c.setStrokeColor(color)
-    c.setStrokeAlpha(0.35)
-    c.setLineWidth(0.6 * mm)
+    # dünner, dunkelroter Rahmen
+    c.setStrokeColor(LINE)
+    c.setLineWidth(0.3 * mm)
     inset = BLEED + 3 * mm
-    c.roundRect(bx + inset, by + inset, TRIM - 6 * mm, TRIM - 6 * mm, 3 * mm, stroke=1, fill=0)
-    c.setStrokeAlpha(1)
+    c.rect(bx + inset, by + inset, TRIM - 6 * mm, TRIM - 6 * mm, stroke=1, fill=0)
 
     # Jahr riesig
     year_s = str(year)

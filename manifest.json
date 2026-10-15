@@ -1,14 +1,14 @@
 {
   "name": "ZeitHit",
   "short_name": "ZeitHit",
-  "description": "Musik-Zeitleistenspiel: QR-Karte scannen, Song hören, Jahr auflösen.",
+  "description": "Musik-Zeitleistenspiel: QR-Karte scannen, Song hören.",
   "lang": "de",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#0F0B1E",
-  "theme_color": "#0F0B1E",
+  "background_color": "#070607",
+  "theme_color": "#070607",
   "icons": [
     { "src": "./icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
     { "src": "./icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
