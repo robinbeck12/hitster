@@ -27,6 +27,21 @@
           <p class="tagline">Karte scannen, Song hören, Jahr auflösen.</p>
           <p class="notice" id="start-notice" role="status" hidden></p>
         </div>
+        <div class="screen-actions">
+          <button class="btn btn-primary" id="btn-scan" type="button">Karte scannen</button>
+        </div>
+      </section>
+
+      <!-- 2. Scanner -->
+      <section class="screen" id="screen-scanner" hidden>
+        <div class="screen-body">
+          <div class="reader" id="reader"></div>
+          <p class="tagline" id="scan-hint">QR-Code der Karte in den Rahmen halten.</p>
+          <p class="notice" id="scan-notice" role="status" hidden></p>
+        </div>
+        <div class="screen-actions">
+          <button class="btn btn-secondary" id="btn-scan-cancel" type="button">Abbrechen</button>
+        </div>
       </section>
 
       <!-- 3./4. Player und Auflösung -->

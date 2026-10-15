@@ -335,3 +335,18 @@ button:focus-visible {
 .btn:disabled {
   opacity: 0.35;
 }
+
+/* ---------- Scanner ---------- */
+.reader {
+  width: min(100%, 24rem);
+  aspect-ratio: 1 / 1;
+  border-radius: 1.25rem;
+  overflow: hidden;
+  background: var(--surface);
+  border: 3px solid var(--secondary);
+}
+.reader video {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover;
+}

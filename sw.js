@@ -1,5 +1,5 @@
 // Cache-Version bei jeder Veröffentlichung erhöhen!
-const CACHE = "hitster-v1";
+const CACHE = "hitster-v2";
 
 const APP_FILES = [
   "./",
@@ -15,6 +15,7 @@ const APP_FILES = [
   "./fonts/BebasNeue-Regular.woff2",
   "./fonts/Inter-Regular.woff2",
   "./fonts/Inter-Bold.woff2",
+  "./vendor/html5-qrcode.min.js",
 ];
 
 self.addEventListener("install", (event) => {

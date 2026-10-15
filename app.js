@@ -3,8 +3,17 @@
 
 const $ = (id) => document.getElementById(id);
 
-const screens = { start: $("screen-start"), player: $("screen-player") };
+const screens = {
+  start: $("screen-start"),
+  scanner: $("screen-scanner"),
+  player: $("screen-player"),
+};
 const el = {
+  btnScan: $("btn-scan"),
+  btnScanCancel: $("btn-scan-cancel"),
+  scanNotice: $("scan-notice"),
+  scanHint: $("scan-hint"),
+  reader: $("reader"),
   title: $("app-title"),
   startNotice: $("start-notice"),
   playerNotice: $("player-notice"),
@@ -25,7 +34,12 @@ const MSG_OFFLINE = "Für die Musik wird Internet gebraucht.";
 const MSG_UNKNOWN = "Diese Karte kenne ich nicht.";
 const MSG_NO_VIDEO = "Für diese Karte ist noch kein Song eingetragen.";
 const MSG_NOT_EMBEDDABLE = "Dieser Song lässt sich nicht einbetten. Bitte eine andere Karte wählen.";
+const MSG_CAMERA_DENIED =
+  "Kamerazugriff verweigert. Bitte in den iPhone-Einstellungen (Safari bzw. ZeitHit) die Kamera erlauben.";
+const MSG_NO_CAMERA = "Keine Kamera gefunden.";
+const MSG_CAMERA_FAILED = "Die Kamera konnte nicht gestartet werden.";
 const YT_API_TIMEOUT_MS = 10000;
+const SCANNER_LIB = "./vendor/html5-qrcode.min.js";
 
 const DECADE_COLORS = [
   [2020, "--dec-20"],
@@ -170,6 +184,7 @@ function createPlayer(song) {
 
 async function showSong(song) {
   const token = ++loadToken;
+  stopScanner();
   current = song;
   setNotice(el.playerNotice, "");
   resetReveal();
@@ -203,6 +218,85 @@ function stopPlayback() {
   setPlaying(false);
 }
 
+// ---------- Scanner ----------
+
+let scanner = null; // Html5Qrcode-Instanz, solange die Kamera läuft
+let scanHandled = false; // entprellt Doppelscans
+
+function loadScannerLib() {
+  if (window.Html5Qrcode) return Promise.resolve();
+  return new Promise((resolve, reject) => {
+    const script = document.createElement("script");
+    script.src = SCANNER_LIB;
+    script.onload = () => resolve();
+    script.onerror = () => {
+      script.remove();
+      reject(new Error("Scanner-Bibliothek fehlt"));
+    };
+    document.head.appendChild(script);
+  });
+}
+
+function cameraErrorMessage(err) {
+  const text = `${err?.name ?? ""} ${err?.message ?? err ?? ""}`;
+  if (/NotAllowed|Permission|denied/i.test(text)) return MSG_CAMERA_DENIED;
+  if (/NotFound|DevicesNotFound|no camera|not found/i.test(text)) return MSG_NO_CAMERA;
+  return MSG_CAMERA_FAILED;
+}
+
+async function stopScanner() {
+  const s = scanner;
+  scanner = null;
+  if (!s) return;
+  try {
+    if (s.isScanning) await s.stop();
+    s.clear();
+  } catch {
+    /* Kamera war schon beendet */
+  }
+}
+
+async function startScan() {
+  loadToken++;
+  stopPlayback();
+  current = null;
+  scanHandled = false;
+  setNotice(el.scanNotice, "");
+  el.scanHint.hidden = false;
+  showScreen("scanner");
+  const token = loadToken;
+
+  try {
+    await loadScannerLib();
+    if (token !== loadToken) return;
+    if (!navigator.mediaDevices?.getUserMedia) throw new Error("NotFound: keine Kamera-API");
+    scanner = new window.Html5Qrcode("reader", { verbose: false });
+    const instance = scanner;
+    await instance.start(
+      { facingMode: "environment" },
+      {
+        fps: 10,
+        qrbox: (w, h) => {
+          const edge = Math.floor(Math.min(w, h) * 0.7);
+          return { width: edge, height: edge };
+        },
+      },
+      (text) => {
+        if (scanHandled) return;
+        scanHandled = true;
+        stopScanner().then(() => openScanned(text));
+      },
+      () => {} // Frames ohne QR-Code ignorieren
+    );
+    if (token !== loadToken) await stopScanner();
+  } catch (err) {
+    if (token !== loadToken) return;
+    await stopScanner();
+    el.scanHint.hidden = true;
+    setNotice(el.scanNotice, cameraErrorMessage(err));
+  }
+}
+
 // ---------- Karten laden / Routing ----------
 
 function extractId(text) {
@@ -211,6 +305,7 @@ function extractId(text) {
 
 function goToStart(message) {
   loadToken++;
+  stopScanner();
   stopPlayback();
   current = null;
   setNotice(el.startNotice, message);
@@ -231,8 +326,8 @@ function route() {
   else if (!current) goToStart("");
 }
 
-/** Wird vom Scanner (P4) mit dem gelesenen Text aufgerufen: volle URL oder nur die ID. */
-export function openScanned(text) {
+/** Wird vom Scanner mit dem gelesenen Text aufgerufen: volle URL oder nur die ID. */
+function openScanned(text) {
   const id = extractId(text);
   if (!id) return goToStart(MSG_UNKNOWN);
   if (location.hash === `#${id}`) loadCard(id);
@@ -255,9 +350,13 @@ el.btnBack.addEventListener("click", () => {
 
 el.btnReveal.addEventListener("click", reveal);
 
+el.btnScan.addEventListener("click", startScan);
+
+el.btnScanCancel.addEventListener("click", () => goToStart(""));
+
 el.btnNext.addEventListener("click", () => {
   history.replaceState(null, "", location.pathname + location.search);
-  goToStart("");
+  startScan();
 });
 
 window.addEventListener("hashchange", route);
