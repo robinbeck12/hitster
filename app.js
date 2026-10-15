@@ -1,5 +1,6 @@
-// ZeitHit – Player, Auflösung und Hash-Routing.
-// Zustände: bereit → karte geladen → spielt → aufgelöst → (nächste Karte)
+// ZeitHit – Karte scannen, Song verdeckt abspielen. Mehr nicht:
+// Jahr, Titel und Interpret stehen auf der Rückseite der Karte.
+// Ablauf: scannen → spielt → (nächste Karte) → scannen …
 
 const $ = (id) => document.getElementById(id);
 
@@ -9,47 +10,29 @@ const screens = {
   player: $("screen-player"),
 };
 const el = {
-  btnScan: $("btn-scan"),
-  btnScanCancel: $("btn-scan-cancel"),
-  scanNotice: $("scan-notice"),
-  scanHint: $("scan-hint"),
-  reader: $("reader"),
   title: $("app-title"),
   startNotice: $("start-notice"),
+  btnScan: $("btn-scan"),
+  scanNotice: $("scan-notice"),
+  scanHint: $("scan-hint"),
+  btnScanRetry: $("btn-scan-retry"),
   playerNotice: $("player-notice"),
-  cardId: $("card-id"),
-  overlayStage: $("stage"),
-  revealHidden: $("reveal-hidden"),
-  revealShown: $("reveal-shown"),
-  year: $("reveal-year"),
-  songTitle: $("reveal-title"),
-  artist: $("reveal-artist"),
+  playHint: $("play-hint"),
   btnPlay: $("btn-play"),
-  btnBack: $("btn-back"),
-  btnReveal: $("btn-reveal"),
   btnNext: $("btn-next"),
 };
 
 const MSG_OFFLINE = "Für die Musik wird Internet gebraucht.";
 const MSG_UNKNOWN = "Diese Karte kenne ich nicht.";
 const MSG_NO_VIDEO = "Für diese Karte ist noch kein Song eingetragen.";
-const MSG_NOT_EMBEDDABLE = "Dieser Song lässt sich nicht einbetten. Bitte eine andere Karte wählen.";
+const MSG_NOT_EMBEDDABLE = "Dieser Song lässt sich nicht abspielen. Bitte nächste Karte nehmen.";
 const MSG_CAMERA_DENIED =
   "Kamerazugriff verweigert. Bitte in den iPhone-Einstellungen (Safari bzw. ZeitHit) die Kamera erlauben.";
 const MSG_NO_CAMERA = "Keine Kamera gefunden.";
 const MSG_CAMERA_FAILED = "Die Kamera konnte nicht gestartet werden.";
 const YT_API_TIMEOUT_MS = 10000;
+const AUTOPLAY_CHECK_MS = 1500;
 const SCANNER_LIB = "./vendor/html5-qrcode.min.js";
-
-const DECADE_COLORS = [
-  [2020, "--dec-20"],
-  [2010, "--dec-10"],
-  [2000, "--dec-00"],
-  [1990, "--dec-90"],
-  [1980, "--dec-80"],
-  [1970, "--dec-70"],
-  [0, "--dec-60"],
-];
 
 let config = { appName: "ZeitHit" };
 let songs = [];
@@ -69,41 +52,22 @@ function setNotice(node, text) {
   node.hidden = !text;
 }
 
+function isPlaying() {
+  return screens.player.classList.contains("is-playing");
+}
+
 function setPlaying(playing) {
   screens.player.classList.toggle("is-playing", playing);
   el.btnPlay.setAttribute("aria-label", playing ? "Pause" : "Abspielen");
-  if (playing) requestWakeLock();
-  else releaseWakeLock();
+  if (playing) {
+    el.playHint.hidden = true;
+    requestWakeLock();
+  } else {
+    releaseWakeLock();
+  }
 }
 
-function decadeColor(year) {
-  const [, variable] = DECADE_COLORS.find(([from]) => year >= from);
-  return `var(${variable})`;
-}
-
-function setPlayerControls(enabled) {
-  el.btnPlay.disabled = !enabled;
-  el.btnBack.disabled = !enabled;
-}
-
-function resetReveal() {
-  el.revealHidden.hidden = false;
-  el.revealShown.hidden = true;
-  el.btnReveal.disabled = false;
-}
-
-function reveal() {
-  if (!current) return;
-  el.year.textContent = String(current.year);
-  el.year.style.setProperty("--year-color", decadeColor(current.year));
-  el.songTitle.textContent = current.title;
-  el.artist.textContent = current.artist;
-  el.revealHidden.hidden = true;
-  el.revealShown.hidden = false;
-  el.btnReveal.disabled = true;
-}
-
-// ---------- Wake Lock (optional) ----------
+// ---------- Wake Lock (Display bleibt an, solange Musik läuft) ----------
 
 async function requestWakeLock() {
   try {
@@ -122,9 +86,7 @@ function releaseWakeLock() {
 }
 
 document.addEventListener("visibilitychange", () => {
-  if (document.visibilityState === "visible" && screens.player.classList.contains("is-playing")) {
-    requestWakeLock();
-  }
+  if (document.visibilityState === "visible" && isPlaying()) requestWakeLock();
 });
 
 // ---------- YouTube ----------
@@ -158,7 +120,8 @@ function onPlayerStateChange(event) {
 
 function onPlayerError() {
   setPlaying(false);
-  setPlayerControls(false);
+  el.btnPlay.disabled = true;
+  el.playHint.hidden = true;
   setNotice(el.playerNotice, MSG_NOT_EMBEDDABLE);
 }
 
@@ -182,27 +145,39 @@ function createPlayer(song) {
   });
 }
 
+/** Versucht direkt abzuspielen. Blockt iOS das (kein Tipp vorher), reicht ein Tipp auf Play. */
+function tryAutoplay(token) {
+  try {
+    player.playVideo();
+  } catch {
+    /* ignoriert – dann eben per Tipp */
+  }
+  setTimeout(() => {
+    if (token === loadToken && !isPlaying() && !el.btnPlay.disabled) el.playHint.hidden = false;
+  }, AUTOPLAY_CHECK_MS);
+}
+
 async function showSong(song) {
   const token = ++loadToken;
   stopScanner();
   current = song;
   setNotice(el.playerNotice, "");
-  resetReveal();
+  el.playHint.hidden = true;
   setPlaying(false);
-  setPlayerControls(false);
-  el.cardId.textContent = `Karte ${song.id}`;
+  el.btnPlay.disabled = true;
   showScreen("player");
 
   try {
     await loadYouTubeApi();
     if (token !== loadToken) return;
     if (player) {
-      player.cueVideoById({ videoId: song.yt, startSeconds: song.start ?? 0 });
+      player.loadVideoById({ videoId: song.yt, startSeconds: song.start ?? 0 });
     } else {
       await createPlayer(song);
       if (token !== loadToken) return;
     }
-    setPlayerControls(true);
+    el.btnPlay.disabled = false;
+    tryAutoplay(token);
   } catch {
     if (token !== loadToken) return;
     setNotice(el.playerNotice, MSG_OFFLINE);
@@ -263,6 +238,7 @@ async function startScan() {
   scanHandled = false;
   setNotice(el.scanNotice, "");
   el.scanHint.hidden = false;
+  el.btnScanRetry.hidden = true;
   showScreen("scanner");
   const token = loadToken;
 
@@ -271,8 +247,7 @@ async function startScan() {
     if (token !== loadToken) return;
     if (!navigator.mediaDevices?.getUserMedia) throw new Error("NotFound: keine Kamera-API");
     scanner = new window.Html5Qrcode("reader", { verbose: false });
-    const instance = scanner;
-    await instance.start(
+    await scanner.start(
       { facingMode: "environment" },
       {
         fps: 10,
@@ -293,6 +268,7 @@ async function startScan() {
     if (token !== loadToken) return;
     await stopScanner();
     el.scanHint.hidden = true;
+    el.btnScanRetry.hidden = false;
     setNotice(el.scanNotice, cameraErrorMessage(err));
   }
 }
@@ -303,33 +279,38 @@ function extractId(text) {
   return /(\d{3})$/.exec((text ?? "").trim())?.[1] ?? null;
 }
 
-function goToStart(message) {
+function clearHash() {
+  if (location.hash) history.replaceState(null, "", location.pathname + location.search);
+}
+
+/** Fehlerfall: Hinweis anzeigen, ein Tipp startet den Scanner wieder. */
+function showMessage(message) {
   loadToken++;
   stopScanner();
   stopPlayback();
   current = null;
+  clearHash();
   setNotice(el.startNotice, message);
   showScreen("start");
 }
 
 function loadCard(id) {
   const song = songs.find((s) => s.id === id);
-  if (!song) return goToStart(MSG_UNKNOWN);
-  if (!song.yt || song.yt === "TODO") return goToStart(MSG_NO_VIDEO);
-  setNotice(el.startNotice, "");
+  if (!song) return showMessage(MSG_UNKNOWN);
+  if (!song.yt || song.yt === "TODO") return showMessage(MSG_NO_VIDEO);
   showSong(song);
 }
 
 function route() {
   const id = extractId(location.hash.replace(/^#/, ""));
   if (id) loadCard(id);
-  else if (!current) goToStart("");
+  else if (!current) startScan();
 }
 
 /** Wird vom Scanner mit dem gelesenen Text aufgerufen: volle URL oder nur die ID. */
 function openScanned(text) {
   const id = extractId(text);
-  if (!id) return goToStart(MSG_UNKNOWN);
+  if (!id) return showMessage(MSG_UNKNOWN);
   if (location.hash === `#${id}`) loadCard(id);
   else location.hash = id;
 }
@@ -339,25 +320,17 @@ function openScanned(text) {
 el.btnPlay.addEventListener("click", () => {
   if (!player) return;
   // Muss direkt im Tipp-Handler laufen, sonst blockt iOS die Wiedergabe.
-  if (screens.player.classList.contains("is-playing")) player.pauseVideo();
+  if (isPlaying()) player.pauseVideo();
   else player.playVideo();
 });
 
-el.btnBack.addEventListener("click", () => {
-  if (!player) return;
-  player.seekTo(Math.max(0, player.getCurrentTime() - 10), true);
-});
-
-el.btnReveal.addEventListener("click", reveal);
-
-el.btnScan.addEventListener("click", startScan);
-
-el.btnScanCancel.addEventListener("click", () => goToStart(""));
-
 el.btnNext.addEventListener("click", () => {
-  history.replaceState(null, "", location.pathname + location.search);
+  clearHash();
   startScan();
 });
+
+el.btnScan.addEventListener("click", startScan);
+el.btnScanRetry.addEventListener("click", startScan);
 
 window.addEventListener("hashchange", route);
 
@@ -372,7 +345,7 @@ async function init() {
     config = cfg;
     songs = list;
   } catch {
-    setNotice(el.startNotice, "Daten konnten nicht geladen werden.");
+    return showMessage("Daten konnten nicht geladen werden.");
   }
   document.title = config.appName;
   el.title.textContent = config.appName;

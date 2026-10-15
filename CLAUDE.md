@@ -8,11 +8,11 @@
 
 Eine Web-App (PWA) für das iPhone, die einen QR-Code auf einer Spielkarte scannt und den
 dazugehörigen Song über den YouTube-IFrame-Player abspielt. Das Cover/Video bleibt verdeckt.
-Nach Tippen auf „Auflösen" zeigt die App Jahr, Titel und Interpret. Dazu gehört ein
+Jahr, Titel und Interpret zeigt die App **nicht** – die stehen auf der Kartenrückseite. Dazu gehört ein
 Generator, der druckbare, doppelseitige Karten (Vorder-/Rückseite) als PDF erzeugt.
 
 Das Spielprinzip (Songs nach Erscheinungsjahr in eine Zeitleiste einsortieren) liegt
-bei den Menschen am Tisch, nicht in der App. Die App ist nur Scanner + Player + Auflösung.
+bei den Menschen am Tisch, nicht in der App. Die App ist nur Scanner + verdeckter Player.
 
 **Wichtig:** Den Namen „Hitster" und dessen Logo/Design NICHT verwenden. Eigener Name
 (`appName` in `config.json`), eigenes Design.
@@ -91,16 +91,17 @@ Die App akzeptiert beim Scan sowohl die volle URL als auch nur die ID (`/(\d{3})
 Wird die URL mit der normalen iPhone-Kamera gescannt, öffnet sie die App, und das
 `hashchange`/Start-Hash lädt die Karte direkt.
 
-**Zustände:** `bereit` → `scannen` → `karte geladen` → `spielt` → `aufgelöst` → (nächste Karte).
+**Ablauf:** App öffnen → Scanner startet sofort → Scan → Song spielt verdeckt → „Nächste Karte" → Scanner.
 
-**Bildschirme / UI:**
-1. **Start/Bereit:** Name, großer Button „Karte scannen".
-2. **Scanner:** Rückkamera (`facingMode: "environment"`), `fps: 10`, Abbrechen-Button.
-   Nach erfolgreichem Scan Scanner stoppen, Doppelscans entprellen.
-3. **Player:** großer runder Play/Pause-Button (iOS erlaubt Autoplay nicht ohne Tipp),
-   „10 s zurück", „Auflösen", „Nächste Karte". Der YouTube-Player liegt unter einem
-   undurchsichtigen Overlay (Wellen-/Equalizer-Animation), nichts vom Video ist sichtbar.
-4. **Auflösung:** Jahr riesig in der Jahrzehntfarbe, darunter Titel und Interpret.
+**Bildschirme / UI** (geändert auf Robins Wunsch, 2026-10-15: keine Auflösung in der App):
+1. **Scanner** (startet automatisch): Rückkamera (`facingMode: "environment"`), `fps: 10`.
+   Nach erfolgreichem Scan Scanner stoppen, Doppelscans entprellen. Bei Kamerafehler Meldung
+   und „Erneut versuchen".
+2. **Player:** Song startet nach dem Scan automatisch; blockt iOS das, erscheint „Zum Abspielen
+   tippen" und ein Tipp auf den großen runden Play/Pause-Button reicht. Außerdem nur
+   „Nächste Karte". Der YouTube-Player liegt unter einem undurchsichtigen Overlay
+   (Equalizer-Animation), nichts vom Video ist sichtbar. Kein Jahr, Titel oder Interpret.
+3. **Hinweis-Bildschirm** (nur im Fehlerfall, z. B. unbekannte Karte): Meldung + „Karte scannen".
 
 **YouTube:** IFrame-Player-API (`https://www.youtube.com/iframe_api`), `playerVars`:
 `controls:0, modestbranding:1, playsinline:1, rel:0, start:<start>`. Lädt die API nicht
@@ -178,7 +179,7 @@ hoher Kontrast, Bedienelemente im unteren Daumenbereich, Dark Mode als Standard.
 
 ## 12. Phasen (nach jeder Phase committen)
 
-- [ ] **P1 Gerüst:** Voraussetzungen prüfen, Ordner, `.gitignore`, `.vscode/`, `config.json`,
+- [x] **P1 Gerüst:** Voraussetzungen prüfen, Ordner, `.gitignore`, `.vscode/`, `config.json`,
   `README.md`, leere Seite. Repo erstellen und veröffentlichen:
   ```bash
   git init -b main && git add -A && git commit -m "Initial commit"
@@ -186,12 +187,12 @@ hoher Kontrast, Bedienelemente im unteren Daumenbereich, Dark Mode als Standard.
   gh api -X POST repos/{owner}/hitster/pages -f "source[branch]=main" -f "source[path]=/"
   gh api repos/{owner}/hitster/pages --jq .html_url   # URL in config.json eintragen
   ```
-- [ ] **P2 PWA:** Manifest, Service Worker, Icons, Fonts, Style-Grundlage.
-- [ ] **P3 Player:** `songs.json`, YouTube-Player, Overlay, Auflösung, Hash-Routing.
-- [ ] **P4 Scanner:** `html5-qrcode` lokal einbinden, Scan-Ablauf, Entprellen, Fehlermeldungen
+- [x] **P2 PWA:** Manifest, Service Worker, Icons, Fonts, Style-Grundlage.
+- [x] **P3 Player:** `songs.json`, YouTube-Player, Overlay, Hash-Routing (Auflösung später auf Wunsch entfernt).
+- [x] **P4 Scanner:** `html5-qrcode` lokal einbinden, Scan-Ablauf, Entprellen, Fehlermeldungen
   (Kamera verweigert, keine Kamera, unbekannte ID).
-- [ ] **P5 Karten:** `make_cards.py`, Testseite erzeugen und visuell prüfen.
-- [ ] **P6 Songs:** `add_song.py` und `check_songs.py`, README um Songpflege ergänzen.
+- [x] **P5 Karten:** `make_cards.py`, Testseite erzeugen und visuell prüfen.
+- [x] **P6 Songs:** `add_song.py` und `check_songs.py`, README um Songpflege ergänzen.
 - [ ] **P7 Abschluss:** Alles pushen, Pages-URL prüfen, Cache-Version erhöhen,
   Checkliste unten abarbeiten.
 
@@ -200,8 +201,8 @@ hoher Kontrast, Bedienelemente im unteren Daumenbereich, Dark Mode als Standard.
 1. Veröffentlichte URL in **Safari** öffnen (mit Internet), kurz warten.
 2. Teilen → **Zum Home-Bildschirm**.
 3. Flugmodus an, App vom Homescreen starten: Die App öffnet sich, nur die Musik meldet „kein Internet".
-4. Internet an, QR scannen: Song startet nach Tipp auf Play, Overlay verdeckt das Video.
-5. „Auflösen" zeigt korrektes Jahr, Titel, Interpret.
+4. Internet an, QR scannen: Song startet (ggf. nach Tipp auf Play), Overlay verdeckt das Video.
+5. Die App zeigt weder Jahr noch Titel/Interpret; Abgleich mit der Kartenrückseite.
 6. Testdruck der Karten: Vorder- und Rückseiten passen zusammen (Duplex-Spiegelung prüfen).
 7. Update-Test: Änderung pushen, Cache-Version erhöhen, App einmal online öffnen, Änderung ist da.
 

@@ -1,8 +1,12 @@
 # ZeitHit
 
-Musik-Zeitleistenspiel als PWA: Der QR-Code einer Spielkarte wird gescannt, der Song
-läuft über den YouTube-Player (Video bleibt verdeckt), „Auflösen" zeigt Jahr, Titel und
-Interpret. Das Einsortieren der Songs in die Zeitleiste passiert am Tisch, nicht in der App.
+Musik-Zeitleistenspiel als PWA: Die App öffnet direkt die Kamera, scannt den QR-Code einer
+Spielkarte und spielt den Song über den YouTube-Player ab – das Video bleibt verdeckt.
+Mehr macht die App nicht: Jahr, Titel und Interpret stehen auf der Rückseite der Karte.
+Das Einsortieren der Songs in die Zeitleiste passiert am Tisch.
+
+Nach dem Scan versucht die App, den Song sofort zu starten. Blockt iOS das automatische
+Abspielen, erscheint „Zum Abspielen tippen" – dann reicht ein Tipp auf den Play-Button.
 
 Veröffentlicht unter: <https://robinbeck12.github.io/hitster/>
 

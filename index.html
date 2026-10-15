@@ -20,11 +20,10 @@
   </head>
   <body>
     <main id="app">
-      <!-- 1. Start / Bereit -->
-      <section class="screen" id="screen-start">
+      <!-- Hinweis/Fehler (unbekannte Karte, Kamera aus …): ein Tipp startet den Scanner -->
+      <section class="screen" id="screen-start" hidden>
         <div class="screen-body">
           <h1 class="app-title" id="app-title">ZeitHit</h1>
-          <p class="tagline">Karte scannen, Song hören, Jahr auflösen.</p>
           <p class="notice" id="start-notice" role="status" hidden></p>
         </div>
         <div class="screen-actions">
@@ -32,7 +31,7 @@
         </div>
       </section>
 
-      <!-- 2. Scanner -->
+      <!-- Scanner (startet automatisch) -->
       <section class="screen" id="screen-scanner" hidden>
         <div class="screen-body">
           <div class="reader" id="reader"></div>
@@ -40,34 +39,23 @@
           <p class="notice" id="scan-notice" role="status" hidden></p>
         </div>
         <div class="screen-actions">
-          <button class="btn btn-secondary" id="btn-scan-cancel" type="button">Abbrechen</button>
+          <button class="btn btn-primary" id="btn-scan-retry" type="button" hidden>Erneut versuchen</button>
         </div>
       </section>
 
-      <!-- 3./4. Player und Auflösung -->
+      <!-- Player: Video liegt verdeckt unter dem Overlay -->
       <section class="screen" id="screen-player" hidden>
         <div class="screen-body">
-          <p class="card-id" id="card-id"></p>
-
           <div class="stage" id="stage">
             <div class="stage-video"><div id="yt-player"></div></div>
-            <div class="stage-overlay" id="overlay" aria-hidden="true">
+            <div class="stage-overlay" aria-hidden="true">
               <div class="eq">
                 <span></span><span></span><span></span><span></span><span></span><span></span><span></span>
               </div>
             </div>
           </div>
-
           <p class="notice" id="player-notice" role="status" hidden></p>
-
-          <div class="reveal" id="reveal" aria-live="polite">
-            <p class="reveal-hidden" id="reveal-hidden">?</p>
-            <div class="reveal-shown" id="reveal-shown" hidden>
-              <p class="reveal-year" id="reveal-year"></p>
-              <p class="reveal-title" id="reveal-title"></p>
-              <p class="reveal-artist" id="reveal-artist"></p>
-            </div>
-          </div>
+          <p class="tagline" id="play-hint" hidden>Zum Abspielen tippen</p>
         </div>
 
         <div class="screen-actions">
@@ -75,11 +63,7 @@
             <svg class="icon-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z" /></svg>
             <svg class="icon-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5h4v14H6zM14 5h4v14h-4z" /></svg>
           </button>
-          <div class="action-row">
-            <button class="btn btn-secondary" id="btn-back" type="button">10 s zurück</button>
-            <button class="btn btn-secondary" id="btn-reveal" type="button">Auflösen</button>
-          </div>
-          <button class="btn btn-ghost" id="btn-next" type="button">Nächste Karte</button>
+          <button class="btn btn-secondary" id="btn-next" type="button">Nächste Karte</button>
         </div>
       </section>
     </main>
