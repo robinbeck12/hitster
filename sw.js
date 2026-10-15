@@ -1,5 +1,5 @@
 // Cache-Version bei jeder Veröffentlichung erhöhen!
-const CACHE = "hitster-v4";
+const CACHE = "hitster-v5";
 
 const APP_FILES = [
   "./",

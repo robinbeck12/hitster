@@ -10,7 +10,6 @@ const screens = {
   player: $("screen-player"),
 };
 const el = {
-  title: $("app-title"),
   startNotice: $("start-notice"),
   btnScan: $("btn-scan"),
   scanNotice: $("scan-notice"),
@@ -348,7 +347,6 @@ async function init() {
     return showMessage("Daten konnten nicht geladen werden.");
   }
   document.title = config.appName;
-  el.title.textContent = config.appName;
   route();
 }
 

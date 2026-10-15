@@ -171,7 +171,7 @@ def draw_qr(c, url, cx, cy, block):
                 col += 1
 
 
-def draw_front(c, tx, ty, song_id, base_url, app_name):
+def draw_front(c, tx, ty, song_id, base_url):
     """tx, ty = linke untere Ecke der Beschnitt-Fläche (66 mm)."""
     bx, by = tx, ty  # Box-Ursprung
     cx, cy = bx + BOX / 2, by + BOX / 2
@@ -187,16 +187,6 @@ def draw_front(c, tx, ty, song_id, base_url, app_name):
     c.restoreState()
 
     draw_qr(c, f"{base_url}#{song_id}", cx, cy, 38 * mm)
-
-    # Name oben, kurze rote Linie unten (keine Song-Infos)
-    band = (TRIM / 2 - 19 * mm) / 2
-    c.setFont("Bebas", 13)
-    c.setFillColor(PRIMARY)
-    name = " ".join(app_name.upper())  # gesperrt
-    c.drawCentredString(cx, cy + 19 * mm + band - 2, name)
-    c.setStrokeColor(PRIMARY)
-    c.setLineWidth(0.5 * mm)
-    c.line(cx - 6 * mm, cy - 19 * mm - band, cx + 6 * mm, cy - 19 * mm - band)
 
 
 def draw_back(c, tx, ty, song):
@@ -315,7 +305,7 @@ def main() -> int:
         # Vorderseiten
         for i, (sid, *_rest) in enumerate(chunk):
             bx, by = slot_origin(i // COLS, i % COLS)
-            draw_front(c, bx, by, sid, base_url, app_name)
+            draw_front(c, bx, by, sid, base_url)
             draw_crop_marks(c, bx, by)
         c.showPage()
 

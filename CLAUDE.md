@@ -153,7 +153,7 @@ Bedienelemente im unteren Daumenbereich.
 - A4-Seite, **3 Spalten × 4 Reihen = 12 Karten**, Schnittmarken an den Ecken.
 - Ausgabe `cards/cards.pdf`: abwechselnd Seite „Vorderseiten" und Seite „Rückseiten".
 - **Vorderseite:** schwarzer Hintergrund mit dunkelrotem Glimmen, weißer QR-Block mit Ruhezone
-  (ca. 38 mm, abgerundet), Name in Rot, **keine Song-Infos**.
+  (ca. 38 mm, abgerundet), kein Name, keine Linie, **keine Song-Infos**.
 - **Rückseite:** Jahr riesig in Rot, darunter Titel + Interpret (Schrift
   automatisch verkleinern, wenn zu lang), unten klein die ID.
 - **Duplex-Spiegelung:** Für Druck „an der langen Kante wenden" die Spalten der Rückseite
