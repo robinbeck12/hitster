@@ -12,6 +12,40 @@ Veröffentlicht unter: <https://robinbeck12.github.io/hitster/>
 2. Im Browser `http://localhost:8000` öffnen (die Kamera funktioniert auf `localhost`).
 3. Zum Test am iPhone immer die veröffentlichte HTTPS-Seite verwenden.
 
+## Songs pflegen
+
+Die Songs stehen in `songs.json` (nur YouTube-IDs, keine Audiodateien):
+
+```json
+{ "id": "042", "yt": "VIDEO_ID", "start": 0, "title": "Titel", "artist": "Interpret", "year": 1985 }
+```
+
+`id` (dreistellig) steht im QR-Code der Karte, `start` ist die Startsekunde (Intro überspringen).
+
+**Song hinzufügen** (Python-Umgebung wie unter „Karten drucken" einrichten):
+
+```bash
+python tools/add_song.py "https://www.youtube.com/watch?v=VIDEO_ID" 1985
+python tools/add_song.py "https://youtu.be/VIDEO_ID" 1985 --start 12
+```
+
+Das Skript prüft, ob das Video existiert und eingebettet werden darf, schlägt Titel und
+Interpret aus dem Videotitel vor und fragt nach, ob du sie ändern willst. Der Song bekommt
+die nächste freie ID; die `TODO`-Platzhalter vom Start werden dabei zuerst belegt.
+Mit `--yes` (und optional `--title`, `--artist`) läuft es ohne Rückfragen.
+
+**Alle Songs prüfen:**
+
+```bash
+python tools/check_songs.py
+```
+
+Das listet Einträge auf, deren Video gelöscht, privat oder nicht mehr einbettbar ist, sowie
+doppelte IDs/Videos und unplausible Felder. Danach `python tools/make_cards.py` für die Karten.
+
+**Veröffentlichen:** `songs.json` committen und pushen. Die App holt die neue Liste beim
+nächsten Öffnen mit Internet (Stale-While-Revalidate), eventuell erst nach einem zweiten Start.
+
 ## Karten drucken
 
 Einmalig die Python-Umgebung einrichten (Python 3 nötig):
