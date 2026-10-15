@@ -313,6 +313,7 @@ def load_cards(args, base_url):
 
 
 def main() -> int:
+    sys.stdout.reconfigure(encoding="utf-8")
     ap = argparse.ArgumentParser(description="Kartengenerator für ZeitHit")
     ap.add_argument("--ids", help="z. B. 1-24 oder 1-12,30")
     ap.add_argument("--test", action="store_true", help="eine Testseite mit Beispieldaten")
